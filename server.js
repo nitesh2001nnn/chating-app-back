@@ -37,14 +37,37 @@ export const io = new Server(server, {
 const onlineUser = new Map();
 
 io.on("connection", (socket) => {
+  // Common function to broadcast the current online list to everyone
+  const broadcastOnlineUsers = () => {
+    const onlineIds = Array.from(onlineUser.keys());
+    console.log("📢 Broadcasting online users list:", onlineIds);
+    io.emit("online_users", onlineIds);
+  };
+
   socket.on("join", (userid) => {
     socket.userId = userid;
     socket.join(`user ${userid}`);
     onlineUser.set(userid, socket.id);
-    console.log(`user ${userid} joined room`);
-    socket.on("disconnect", () => {
+    console.log(`👤 User joined: ${userid}`);
+
+    // Broadcast updated list to everyone
+    broadcastOnlineUsers();
+  });
+
+  socket.on("get_online_users", () => {
+    // Respond to individual requests with the current list
+    socket.emit("online_users", Array.from(onlineUser.keys()));
+  });
+
+  socket.on("disconnect", () => {
+    if (socket.userId) {
+      console.log(`🔌 User disconnected: ${socket.userId}`);
       onlineUser.delete(socket.userId);
-    });
+      // Broadcast updated list to everyone
+      broadcastOnlineUsers();
+    } else {
+      console.log(`🔌 Unknown user disconnected: ${socket.id}`);
+    }
   });
 
   socket.on("send_message", async (data) => {
@@ -70,6 +93,7 @@ io.on("connection", (socket) => {
 
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("reciever_message", payload);
+        io.to(receiverSocketId).emit("chat_list_update", payload);
         await updateDeleiveryStatus(messageId.id);
         payload.status = "delivered";
       } else {
@@ -77,6 +101,7 @@ io.on("connection", (socket) => {
       }
 
       socket.emit("reciever_message", payload);
+      socket.emit("chat_list_update", payload);
     } catch (err) {
       console.log("err", err);
     }
@@ -92,6 +117,21 @@ io.on("connection", (socket) => {
     if (senderSocketId) {
       io.to(senderSocketId).emit("msg_seen", { chatId });
     }
+  });
+
+  socket.on("typing", ({ chatId, senderId, recieverId }) => {
+    console.log("datas here", chatId, senderId, recieverId);
+    socket.to(`user ${recieverId}`).emit("typing", {
+      chatId,
+      senderId,
+    });
+  });
+
+  socket.on("stop_typing", ({ chatId, senderId, recieverId }) => {
+    socket.to(`user ${recieverId}`).emit("stop_typing", {
+      chatId,
+      senderId,
+    });
   });
 
   socket.on("disconnected", () => {

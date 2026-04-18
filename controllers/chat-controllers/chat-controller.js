@@ -32,7 +32,6 @@ const sendMessage = async (req, res) => {
       createdAt: new Date(),
     };
 
-    console.log("paylaod created waht", payload);
 
     io.to(`users_${recieverId}`).emit("new_message", payload);
     io.to(`users_${senderId}`).emit("new_message", payload);
