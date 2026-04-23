@@ -8,16 +8,6 @@ const insertContact = async (
   linked_user_id,
   isRegistered,
 ) => {
-  console.log(
-    "values are",
-    owner_user_id,
-    contact_name,
-    contact_email,
-    contact_phoneNumber,
-    linked_user_id,
-    isRegistered,
-  );
-
   const [result] = await db.query(
     "insert into userContacts (owner_user_id,contact_name,contact_email,contact_phoneNumber,linked_user_id,isRegistered) values(?,?,?,?,?,?)",
     [
@@ -29,7 +19,6 @@ const insertContact = async (
       isRegistered,
     ],
   );
-  console.log("result after insert", result);
 
   return result.insertId;
 };
@@ -37,12 +26,8 @@ const insertContact = async (
 const updateContactModel = async (id, owner_user_id, updates, values) => {
   try {
     if (!updates?.length) {
-      console.log("here it is not ");
-
       return 0;
     }
-
-    console.log(updates, values, "updates and avalues");
 
     const sql = `
       UPDATE userContacts
@@ -66,4 +51,12 @@ const deleteUser = async (id, owner_user_id) => {
   return result.affectedRows;
 };
 
-export { insertContact, updateContactModel, deleteUser };
+const fetchContacts = async (owner_user_id) => {
+  console.log("Onwer id", owner_user_id);
+  const sql = `select * from userContacts where owner_user_id = ?`;
+  const [result] = await db.query(sql, [owner_user_id]);
+  console.log("fetch contacts", result);
+  return result;
+};
+
+export { insertContact, updateContactModel, deleteUser, fetchContacts };

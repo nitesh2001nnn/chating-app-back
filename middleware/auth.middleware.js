@@ -4,18 +4,15 @@ import { findUser } from "../models/user.models.js";
 const authMiddleWare = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    console.log("authHeader", authHeader);
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "unauthorized" });
     }
     const token = authHeader.split(" ")[1];
-    console.log("token", token);
 
     const decode = jwt.verify(token, process.env.jwt_secretKey);
-    console.log("decode", decode);
+
     const users = await findUser(decode.email);
-    console.log("users", users);
 
     if (!users.length) {
       return res.status(402).json({ message: "user not found" });

@@ -2,20 +2,21 @@ import {
   insertContact,
   updateContactModel,
   deleteUser,
+  fetchContacts,
 } from "../../models/add-contact-models.js";
 import db from "../../config/db.js";
 import { CONTACT_FIELDS } from "../../schemas/contact-schema.js";
+
 const addContact = async (req, res) => {
   try {
     const ownerUserID = req.user.id;
-    console.log("owner", ownerUserID);
+
     const { name, email, phoneNumber } = req.body;
-    console.log("name email ph", name, email, phoneNumber);
 
     const [users] = await db.query("select * from users where email = ?", [
       email,
     ]);
-    console.log("users aftrr searching ", users);
+
     let isRegistered = false;
     let linked_Users = null;
     if (users.length > 0) {
@@ -31,7 +32,6 @@ const addContact = async (req, res) => {
       linked_Users,
       isRegistered,
     );
-    console.log("data", data);
     res.status(200).json({ message: "user saved successfully !!" });
   } catch (err) {
     res.status(400).json({ message: "SOmething went wrong", err });
@@ -45,7 +45,6 @@ const updateContact = async (req, res) => {
   const values = [];
 
   for (const field of Object.keys(CONTACT_FIELDS)) {
-    console.log("filed", field);
     if (req.body[field] !== undefined) {
       updates.push(`${field} = ?`);
       values.push(req.body[field]);
@@ -56,7 +55,6 @@ const updateContact = async (req, res) => {
   }
 
   // values.push(contactId, owner_user_id);
-  console.log("update id", contactId, updates, values, owner_user_id);
 
   const affectedRows = await updateContactModel(
     contactId,
@@ -93,4 +91,14 @@ const deleteUserContact = async (req, res) => {
   });
 };
 
-export { addContact, updateContact, deleteUserContact };
+const fetchContactsData = async (req, res) => {
+  const owner_user_id = req.user.id;
+  const result = await fetchContacts(owner_user_id);
+  console.log("fetchcontacts", result);
+  res.json({
+    success: true,
+    data: result,
+  });
+};
+
+export { addContact, updateContact, deleteUserContact, fetchContactsData };

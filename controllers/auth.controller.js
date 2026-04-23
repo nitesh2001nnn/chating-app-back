@@ -4,20 +4,71 @@ import generateToken from "../services/token.services.js";
 import { generateOtp } from "../utils/generate-otp.js";
 import { hashCompare, hash } from "../utils/hash.js";
 import db from "../config/db.js";
+import bcrypt from "bcrypt";
 
-const userSignup = (req, res) => {
-  const { email, phoneNumber } = req.body;
+const userSignup = async (req, res) => {
+  const { email, phoneNumber, password } = req.body;
+  console.log("pass", password);
+  const genSalt = await bcrypt.genSalt(10);
+  const bcryptPass = await bcrypt.hash(password, genSalt);
 
-  const insertion = createUsers(email, phoneNumber);
+  const insertion = createUsers(email, false, phoneNumber, bcryptPass);
   if (insertion) {
-    res.json({ message: "hello i m activated" });
+    const result = await sendLoginOtp(email);
+  }
+
+  try {
+    if (result.expiresIn) {
+      res.status(200).json({
+        success: true,
+        status: 200,
+        message: "OTP sent successfully",
+        data: {
+          expiresIn: result.expiresIn,
+        },
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ message: result.message });
   }
 };
 
-const sendLoginOtp = async (req, res) => {
-  try {
-    const { email } = req.body;
+const login = async (req, res) => {
+  const { email, password } = req.body;
 
+  const [users] = await db.query("select * from users where email = ?", [
+    email,
+  ]);
+
+  if (!users.length) {
+    return res.status(404).json({ message: "User not registered" });
+  }
+
+  const isMatch = await bcrypt.compare(password, users[0].password);
+
+  if (!isMatch) {
+    return res.status(400).json({ message: "Invalid Password!!" });
+  }
+  const result = await sendLoginOtp(email);
+
+  try {
+    if (result.expiresIn) {
+      res.status(200).json({
+        success: true,
+        status: 200,
+        message: "OTP sent successfully",
+        data: {
+          expiresIn: result.expiresIn,
+        },
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ message: result.message });
+  }
+};
+
+const sendLoginOtp = async (email) => {
+  try {
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
@@ -25,7 +76,6 @@ const sendLoginOtp = async (req, res) => {
     const [users] = await db.query("select * from users where email = ?", [
       email,
     ]);
-    console.log("users are what", users);
 
     if (!users.length) {
       return res.status(404).json({ message: "User not registered" });
@@ -39,42 +89,17 @@ const sendLoginOtp = async (req, res) => {
     await insertOtp(email, otpHash, expireAt);
     await sendOtp(email, "Login OTP", otp);
 
-    return res.status(200).json({
-      success: true,
-      status: 200,
-      message: "OTP sent successfully",
-      data: {
-        expiresIn: 300,
-      },
-    });
+    return { expiresIn: 300 };
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to send OTP" });
-  }
-};
-
-const sendOtpSignupEMail = async (req, res) => {
-  const { email } = req.body;
-  const [users] = await findUser(email);
-  if (users?.length) {
-    res.status(400).json({ message: "User is already registered" });
-  }
-  const otpGen = generateOtp();
-  console.log("otpgen", otpGen);
-  const otpHash = await hash(otpGen);
-
-  const expireAt = new Date(Date.now() + 5 * 60 * 1000);
-  const data = await insertOtp(email, otpHash, expireAt);
-  if (data) {
-    sendOtp(email, "Your code is", otpGen);
-    res.status(200).json({ message: "mail has been sended" });
+    return { message: "failed to send" };
   }
 };
 
 const verifyOtp = async (req, res) => {
   try {
-    const { email, otp, phoneNumber } = req.body;
-    console.log("ejmail is", email);
+    const { email, otp } = req.body;
+
     const [rows] = await db.query(
       "select * from  email_otps where email = ? order by created_at desc limit 1",
       [email],
@@ -92,7 +117,6 @@ const verifyOtp = async (req, res) => {
     }
 
     const isValid = await hashCompare(otp.toString(), otpRecord.otp_hash);
-    console.log("isvalid or not", isValid);
 
     if (!isValid) {
       res.status(400).json({ message: "OTP is Invalid" });
@@ -102,10 +126,10 @@ const verifyOtp = async (req, res) => {
       email,
     ]);
     let user;
-    if (!usersData.length) {
+    if (!usersData.isVerified) {
       const [result] = await db.query(
-        "insert into users (email,isVerified,phone_number) values(?,?,?)",
-        [email, true, phoneNumber],
+        "update users set isVerified = true where email =? ",
+        [email],
       );
       user = {
         id: result.insertId,
@@ -116,10 +140,6 @@ const verifyOtp = async (req, res) => {
     }
 
     await db.query("delete from email_otps where id = ?", [otpRecord.id]);
-
-    console.log("rows are waht", rows);
-    console.log("user generate what", user);
-
     const token = generateToken(user);
     await res.json({
       success: true,
@@ -133,4 +153,4 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-export { userSignup, verifyOtp, sendOtpSignupEMail, sendLoginOtp };
+export { userSignup, verifyOtp, sendLoginOtp, login };

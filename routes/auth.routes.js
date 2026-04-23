@@ -1,12 +1,14 @@
 import { Router } from "express";
 import {
+  login,
   sendLoginOtp,
-  sendOtpSignupEMail,
+  userSignup,
   verifyOtp,
 } from "../controllers/auth.controller.js";
 import {
   addContact,
   deleteUserContact,
+  fetchContactsData,
   updateContact,
 } from "../controllers/add-contact/add-contact.js";
 import authMiddleWare from "../middleware/auth.middleware.js";
@@ -19,8 +21,8 @@ import {
 
 const router = Router();
 
-router.post("/login", sendLoginOtp);
-router.post("/signup", sendOtpSignupEMail);
+router.post("/login", login);
+router.post("/signup", userSignup);
 router.post("/verify-otp", verifyOtp);
 router.post("/send-message", authMiddleWare, sendMessage);
 router.get("/get-update-list", authMiddleWare, getUpdatedChatList);
@@ -29,5 +31,6 @@ router.patch("/seen-check/:id", authMiddleWare, checkMsgSeen);
 router.post("/add-contact", authMiddleWare, addContact);
 router.patch("/update-contact/:contactId", authMiddleWare, updateContact);
 router.delete("/delete-contact/:contactId", authMiddleWare, deleteUserContact);
+router.get("/fetch-contacts", authMiddleWare, fetchContactsData);
 
 export default router;

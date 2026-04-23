@@ -40,7 +40,7 @@ io.on("connection", (socket) => {
   // Common function to broadcast the current online list to everyone
   const broadcastOnlineUsers = () => {
     const onlineIds = Array.from(onlineUser.keys());
-    console.log("📢 Broadcasting online users list:", onlineIds);
+
     io.emit("online_users", onlineIds);
   };
 
@@ -61,7 +61,6 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     if (socket.userId) {
-      console.log(`🔌 User disconnected: ${socket.userId}`);
       onlineUser.delete(socket.userId);
       // Broadcast updated list to everyone
       broadcastOnlineUsers();
@@ -120,7 +119,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("typing", ({ chatId, senderId, recieverId }) => {
-    console.log("datas here", chatId, senderId, recieverId);
     socket.to(`user ${recieverId}`).emit("typing", {
       chatId,
       senderId,

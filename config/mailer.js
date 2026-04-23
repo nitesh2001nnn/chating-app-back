@@ -15,7 +15,6 @@ export const transporter = nodemailer.createTransport({
 });
 
 const sendOtp = async (to, subject, text) => {
-  console.log("email is waht", to, process.env.USER_EMAIL);
   if (!to) {
     throw new Error("Recipient email is missing");
   }
@@ -27,7 +26,7 @@ const sendOtp = async (to, subject, text) => {
       subject,
       text,
     });
-    console.log("info is waht", info);
+
     return info;
   } catch (err) {
     console.log("Hi");

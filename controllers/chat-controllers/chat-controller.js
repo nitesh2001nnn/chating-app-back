@@ -13,10 +13,8 @@ const sendMessage = async (req, res) => {
   try {
     const senderId = req.user.id;
     const { recieverId, txt } = req.body;
-    console.log("senderid", senderId, "reciverdi txt", recieverId, txt);
 
     let chatId = await findChats(senderId, recieverId);
-    console.log("chat id", chatId);
 
     if (!chatId) {
       chatId = await insertChats(senderId, recieverId);
