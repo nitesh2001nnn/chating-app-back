@@ -26,4 +26,19 @@ const findUser = async (email) => {
   return result;
 };
 
-export { createUsers, insertOtp, findUser };
+const updateUser = async (email, fields) => {
+  const keys = Object.keys(fields);
+
+  const setClause = keys.map((key) => `${key} = ?`).join(", ");
+  const values = keys.map((key) => fields[key]);
+
+  const query = `
+    UPDATE users 
+    SET ${setClause} 
+    WHERE email = ?
+  `;
+
+  await db.execute(query, [...values, email]);
+};
+
+export { createUsers, insertOtp, findUser, updateUser };
