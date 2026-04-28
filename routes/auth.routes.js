@@ -4,6 +4,7 @@ import {
   sendLoginOtp,
   userSignup,
   verifyOtp,
+  resendOtp,
 } from "../controllers/auth.controller.js";
 import {
   addContact,
@@ -32,5 +33,6 @@ router.post("/add-contact", authMiddleWare, addContact);
 router.patch("/update-contact/:contactId", authMiddleWare, updateContact);
 router.delete("/delete-contact/:contactId", authMiddleWare, deleteUserContact);
 router.get("/fetch-contacts", authMiddleWare, fetchContactsData);
+router.post("/resend-otp", resendOtp);
 
 export default router;
