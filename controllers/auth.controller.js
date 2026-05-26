@@ -2,6 +2,7 @@ import sendOtp from "../config/mailer.js";
 import {
   createUsers,
   findUser,
+  forgotPassToken,
   getAuthAttempt,
   insertOtp,
   resetAuthAttempts,
@@ -13,12 +14,13 @@ import { generateOtp } from "../utils/generate-otp.js";
 import { hashCompare, hash } from "../utils/hash.js";
 import db from "../config/db.js";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 let window_time = 6 * 60 * 1000;
 let Max_Attempts = 3;
 
 const userSignup = async (req, res) => {
-  const { email, phoneNumber, password } = req.body;
+  const { email, phoneNumber, password, fullName } = req.body;
   const genSalt = await bcrypt.genSalt(10);
   const bcryptPass = await bcrypt.hash(password, genSalt);
 
@@ -263,10 +265,11 @@ const verifyOtp = async (req, res) => {
 
       await upsertAuthAttempt(user.id, "verify_otp", attempt, now, lockUntil);
 
-      return res.status(400).json({
+      return res.status(429).json({
         message: lockUntil
           ? "Too many attempts. Locked for 5 mins"
           : `Invalid OTP. ${Max_Attempts - attempt} attempts left`,
+        isLocked: lockUntil ? true : false,
       });
     }
 
@@ -300,4 +303,27 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-export { userSignup, verifyOtp, sendLoginOtp, login, resendOtp };
+const PasswordResetToken = async (req, res) => {
+  const { email } = req.body;
+  const userID = await findUser(email);
+  const cryptoToken = crypto.randomBytes(32).toString("hex");
+  try {
+    if (!userID.length) {
+      return res.status(400).json({ error: "user not found" });
+    }
+    const expireAt = new Date(Date.now() + 15 * 60 * 1000);
+    const resultId = await forgotPassToken(userID[0].id, cryptoToken, expireAt);
+    console.log("resultid", resultId);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+export {
+  userSignup,
+  verifyOtp,
+  sendLoginOtp,
+  login,
+  resendOtp,
+  PasswordResetToken,
+};

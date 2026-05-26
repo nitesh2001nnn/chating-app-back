@@ -1,9 +1,15 @@
 import db from "../config/db.js";
 
-const createUsers = async (email, isVerified, phoneNumber, password) => {
+const createUsers = async (
+  email,
+  isVerified,
+  phoneNumber,
+  password,
+  fullName,
+) => {
   const [result] = await db.query(
-    "insert into users (email,isVerified,phone_number,password) values (?,?,?,?)",
-    [email, isVerified, phoneNumber, password],
+    "insert into users (email,isVerified,phone_number,password,fullName) values (?,?,?,?,?)",
+    [email, isVerified, phoneNumber, password, fullName],
   );
 
   return result.insertId;
@@ -80,6 +86,13 @@ const resetAuthAttempts = async (user_id, type) => {
   );
 };
 
+const forgotPassToken = async (user_id, token, expires_at) => {
+  await db.execute(
+    `insert into password_reset (userId,token,expires_at) values(?,?,?)`,
+    [user_id, token, expires_at],
+  );
+};
+
 export {
   createUsers,
   insertOtp,
@@ -88,4 +101,5 @@ export {
   getAuthAttempt,
   upsertAuthAttempt,
   resetAuthAttempts,
+  forgotPassToken,
 };
