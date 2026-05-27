@@ -87,10 +87,35 @@ const resetAuthAttempts = async (user_id, type) => {
 };
 
 const forgotPassToken = async (user_id, token, expires_at) => {
-  await db.execute(
-    `insert into password_reset (userId,token,expires_at) values(?,?,?)`,
+  const [res] = await db.execute(
+    `insert into password_reset (userId,token,expire_at) values(?,?,?)`,
     [user_id, token, expires_at],
   );
+  return res.insertId;
+};
+
+const getTokenDetails = async (token) => {
+  const [res] = await db.execute(
+    `select * from password_reset where token = ?`,
+    [token],
+  );
+  return res;
+};
+
+const updatePassword = async (password, userId) => {
+  const [res] = await db.query(`update  users set password = ? where id= ?`, [
+    password,
+    userId,
+  ]);
+  return res;
+};
+
+const markIsUsed = async (id) => {
+  const [res] = await db.query(
+    `update  password_reset set is_used = true where id = ?`,
+    [id],
+  );
+  return res;
 };
 
 export {
@@ -102,4 +127,7 @@ export {
   upsertAuthAttempt,
   resetAuthAttempts,
   forgotPassToken,
+  getTokenDetails,
+  updatePassword,
+  markIsUsed,
 };

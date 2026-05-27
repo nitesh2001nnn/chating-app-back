@@ -6,6 +6,7 @@ import {
   verifyOtp,
   resendOtp,
   PasswordResetToken,
+  ResetPassword,
 } from "../controllers/auth.controller.js";
 import {
   addContact,
@@ -36,5 +37,6 @@ router.delete("/delete-contact/:contactId", authMiddleWare, deleteUserContact);
 router.get("/fetch-contacts", authMiddleWare, fetchContactsData);
 router.post("/resend-otp", resendOtp);
 router.post("/forgot-password-token", PasswordResetToken);
+router.post("/reset-password", ResetPassword);
 
 export default router;

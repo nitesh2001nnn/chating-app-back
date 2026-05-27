@@ -1,11 +1,14 @@
-import sendOtp from "../config/mailer.js";
+import sendOtp, { transporter } from "../config/mailer.js";
 import {
   createUsers,
   findUser,
   forgotPassToken,
   getAuthAttempt,
+  getTokenDetails,
   insertOtp,
+  markIsUsed,
   resetAuthAttempts,
+  updatePassword,
   updateUser,
   upsertAuthAttempt,
 } from "../models/user.models.js";
@@ -314,8 +317,54 @@ const PasswordResetToken = async (req, res) => {
     const expireAt = new Date(Date.now() + 15 * 60 * 1000);
     const resultId = await forgotPassToken(userID[0].id, cryptoToken, expireAt);
     console.log("resultid", resultId);
+    const resetLink = `http://localhost:5173/reset-password?token=${cryptoToken}`;
+    if (resultId) {
+      await transporter.sendMail({
+        to: email,
+        subject: "Reset Password Token",
+        html: `
+          <h2>Reset Password</h2>
+          <p>Click below link:</p>
+            <a href="${resetLink}">
+                Reset Password
+            </a>
+        `,
+      });
+    }
+    console.log("userid", userID);
+    return res.status(200).json({
+      message: "Password reset link sent",
+    });
   } catch (err) {
     console.error(err);
+  }
+};
+
+const ResetPassword = async (req, res) => {
+  const { password, token } = req.body;
+
+  const tokenData = await getTokenDetails(token);
+  if (!tokenData.length) {
+    return res.status(400).json({ error: "Token is invalid!!" });
+  }
+
+  const reset = tokenData[0];
+
+  if (new Date() > new Date(reset.expire_at)) {
+    return res.status(400).json({ error: "Token is expired!!" });
+  }
+
+  if (reset.isUsed) {
+    return res.status(400).json({ error: "Token is already used!!" });
+  }
+
+  const hashedPass = await bcrypt.hash(password, 10);
+  const passChange = await updatePassword(hashedPass, reset.userId);
+  await markIsUsed(reset.id);
+  if (passChange) {
+    return res
+      .status(200)
+      .json({ message: "Password has changed successfuly!!" });
   }
 };
 
@@ -326,4 +375,5 @@ export {
   login,
   resendOtp,
   PasswordResetToken,
+  ResetPassword,
 };
