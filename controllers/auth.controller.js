@@ -334,6 +334,7 @@ const PasswordResetToken = async (req, res) => {
     console.log("userid", userID);
     return res.status(200).json({
       message: "Password reset link sent",
+      isLinkeSend:true
     });
   } catch (err) {
     console.error(err);
@@ -364,7 +365,7 @@ const ResetPassword = async (req, res) => {
   if (passChange) {
     return res
       .status(200)
-      .json({ message: "Password has changed successfuly!!" });
+      .json({ message: "Password has changed successfuly!!" ,isResetDone:true});
   }
 };
 
