@@ -13,6 +13,13 @@ const sendMessage = async (req, res) => {
   try {
     const senderId = req.user.id;
     const { recieverId, txt } = req.body;
+    console.log(
+      "sender id is what",
+      senderId,
+      "recieverId,txt",
+      recieverId,
+      txt,
+    );
 
     let chatId = await findChats(senderId, recieverId);
 
@@ -29,7 +36,6 @@ const sendMessage = async (req, res) => {
       text: txt,
       createdAt: new Date(),
     };
-
 
     io.to(`users_${recieverId}`).emit("new_message", payload);
     io.to(`users_${senderId}`).emit("new_message", payload);
@@ -93,4 +99,35 @@ const checkMsgSeen = async (req, res) => {
   }
 };
 
-export { sendMessage, getUpdatedChatList, getUpdatedMessages, checkMsgSeen };
+const getOrCreateChat = async (req, res) => {
+  try {
+    const senderId = req.user.id;
+    const { receiverId } = req.body;
+    if (!receiverId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "receiverId is required" });
+    }
+    let chat = await findChats(senderId, receiverId);
+    if (!chat) {
+      chat = await insertChats(senderId, receiverId);
+    }
+    res.status(200).json({
+      success: true,
+      chatId: chat.id,
+    });
+  } catch (error) {
+    console.error("Error in getOrCreateChat:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "failed to get or create chat" });
+  }
+};
+
+export {
+  sendMessage,
+  getUpdatedChatList,
+  getUpdatedMessages,
+  checkMsgSeen,
+  getOrCreateChat,
+};

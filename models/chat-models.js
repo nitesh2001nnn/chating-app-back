@@ -34,9 +34,8 @@ const insertMessage = async (
 };
 
 const getChatList = async (userId) => {
-  
   const [rows] = await db.query(
-    "select c.id as chat_id, if(c.user1_id =?,c.user2_id,c.user1_id) as other_user_id,COALESCE(uc.contact_name, u.phone_number) AS display_name,m.message_text,m.created_at as last_message_time , (select COUNT(*) from messages where chat_id = c.id AND sender_id != ? AND isSeen = 0) as unread_count  from chats c left join users u on u.id = IF (c.user1_id=?,c.user2_id,c.user1_id) LEFT JOIN userContacts uc ON uc.contact_phoneNumber = u.phone_number AND uc.owner_user_id=? LEFT JOIN messages m ON m.id = ( SELECT id FROM messages WHERE chat_id = c.id ORDER BY created_at DESC LIMIT 1 ) WHERE c.user1_id = ? OR c.user2_id = ? ORDER BY last_message_time DESC",
+    "select c.id as chat_id, if(c.user1_id =?,c.user2_id,c.user1_id) as other_user_id,COALESCE(uc.contact_name, u.phone_number) AS display_name,m.message_text,m.created_at as last_message_time , (select COUNT(*) from messages where chat_id = c.id AND sender_id != ? AND isSeen = 0) as unread_count  from chats c left join users u on u.id = IF (c.user1_id=?,c.user2_id,c.user1_id) LEFT JOIN usercontacts uc ON uc.linked_user_id = u.id AND uc.owner_user_id=? LEFT JOIN messages m ON m.id = ( SELECT id FROM messages WHERE chat_id = c.id ORDER BY created_at DESC LIMIT 1 ) WHERE c.user1_id = ? OR c.user2_id = ? ORDER BY last_message_time DESC",
     [userId, userId, userId, userId, userId, userId],
   );
 
@@ -63,7 +62,6 @@ const updateSeenStatus = async (chatId, senderID) => {
     "update messages set isSeen = 1,status = 'seen'  where chat_id = ? and sender_id != ? ",
     [chatId, senderID],
   );
-  
 };
 
 export {

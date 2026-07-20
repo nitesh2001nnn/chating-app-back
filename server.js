@@ -5,6 +5,8 @@ import http from "http";
 import app from "./app.js";
 import { Server } from "socket.io";
 import {
+  findChats,
+  insertChats,
   insertMessage,
   updateDeleiveryStatus,
   updateSeenStatus,
@@ -71,7 +73,7 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", async (data) => {
     try {
-      const { chatId, recieverId, message } = data;
+      let { chatId, recieverId, message } = data;
       console.log(
         "recieverid",
         recieverId,
@@ -79,6 +81,14 @@ io.on("connection", (socket) => {
         typeof recieverId,
       );
       const senderID = socket.userId;
+
+      // Ensure a valid chat exists in chats table
+      let chat = await findChats(senderID, recieverId);
+      if (!chat) {
+        chat = await insertChats(senderID, recieverId);
+      }
+      chatId = chat.id;
+
       const messageId = await insertMessage(chatId, senderID, message);
       const payload = {
         chatId,

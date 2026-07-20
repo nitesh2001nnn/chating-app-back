@@ -310,6 +310,7 @@ const PasswordResetToken = async (req, res) => {
   const { email } = req.body;
   const userID = await findUser(email);
   const cryptoToken = crypto.randomBytes(32).toString("hex");
+  console.log("crypto token", cryptoToken);
   try {
     if (!userID.length) {
       return res.status(400).json({ error: "user not found" });
@@ -334,7 +335,7 @@ const PasswordResetToken = async (req, res) => {
     console.log("userid", userID);
     return res.status(200).json({
       message: "Password reset link sent",
-      isLinkeSend:true
+      isLinkeSend: true,
     });
   } catch (err) {
     console.error(err);
@@ -363,9 +364,10 @@ const ResetPassword = async (req, res) => {
   const passChange = await updatePassword(hashedPass, reset.userId);
   await markIsUsed(reset.id);
   if (passChange) {
-    return res
-      .status(200)
-      .json({ message: "Password has changed successfuly!!" ,isResetDone:true});
+    return res.status(200).json({
+      message: "Password has changed successfuly!!",
+      isResetDone: true,
+    });
   }
 };
 
