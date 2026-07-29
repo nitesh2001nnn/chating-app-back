@@ -54,6 +54,33 @@ const SaveProfilePhoto = async (user_id, profile_photo) => {
   return result;
 };
 
+const saveProfileUserData = async (
+  userFields,
+  placeholders,
+  userUpdates,
+  userValues,
+) => {
+  const [updateUsers] = await db.query(
+    `insert into users(${userFields.join(",")}) values(${placeholders}) on duplicate key update ${userUpdates.join(",")}`,
+    userValues,
+  );
+
+  return updateUsers;
+};
+
+const saveProfileData = async (
+  profileFields,
+  placeholders,
+  profileUpdates,
+  profileValues,
+) => {
+  const [updateUsers] = await db.query(
+    `insert into user_profiles(${profileFields.join(",")}) values(${placeholders}) on duplicate key update ${profileUpdates.join(",")}`,
+    profileValues,
+  );
+  return updateUsers;
+};
+
 export {
   InsertProfileData,
   InsertProfileImport,
@@ -61,4 +88,6 @@ export {
   UpdateProfileImport,
   checkUserFound,
   SaveProfilePhoto,
+  saveProfileData,
+  saveProfileUserData,
 };

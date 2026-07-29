@@ -25,6 +25,8 @@ import {
 
 import { ProfilePhotoImport } from "../controllers/profile-photo/profile-photo.js";
 import { upload } from "../uploads/upload.js";
+import { saveProfileUserData } from "../models/profile-data-models.js";
+import { profileUserData } from "../controllers/profile-photo/profile-photo.js";
 
 const router = Router();
 
@@ -36,6 +38,7 @@ router.post("/get-or-create-chat", authMiddleWare, getOrCreateChat);
 router.get("/get-update-list", authMiddleWare, getUpdatedChatList);
 router.get("/updated-messages/:chat_id", authMiddleWare, getUpdatedMessages);
 router.patch("/seen-check/:id", authMiddleWare, checkMsgSeen);
+router.post("/profile-data", authMiddleWare, profileUserData);
 router.post("/add-contact", authMiddleWare, addContact);
 router.patch("/update-contact/:contactId", authMiddleWare, updateContact);
 router.delete("/delete-contact/:contactId", authMiddleWare, deleteUserContact);
