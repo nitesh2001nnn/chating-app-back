@@ -55,12 +55,13 @@ const SaveProfilePhoto = async (user_id, profile_photo) => {
 };
 
 const saveProfileUserData = async (
+  connection,
   userFields,
   placeholders,
   userUpdates,
   userValues,
 ) => {
-  const [updateUsers] = await db.query(
+  const [updateUsers] = await connection.query(
     `insert into users(${userFields.join(",")}) values(${placeholders}) on duplicate key update ${userUpdates.join(",")}`,
     userValues,
   );
@@ -69,16 +70,26 @@ const saveProfileUserData = async (
 };
 
 const saveProfileData = async (
+  connection,
   profileFields,
   placeholders,
   profileUpdates,
   profileValues,
 ) => {
-  const [updateUsers] = await db.query(
+  const [updateUsers] = await connection.query(
     `insert into user_profiles(${profileFields.join(",")}) values(${placeholders}) on duplicate key update ${profileUpdates.join(",")}`,
     profileValues,
   );
   return updateUsers;
+};
+
+const userDetails = async (userId) => {
+  console.log("userid", userId);
+  const [userData] = await db.execute(
+    "select u.fullName,u.email,u.phone_number,up.profile_photo,up.bio from users u left join user_profiles up on u.id =up.user_id where u.id=?",
+    [userId],
+  );
+  return userData;
 };
 
 export {
@@ -90,4 +101,5 @@ export {
   SaveProfilePhoto,
   saveProfileData,
   saveProfileUserData,
+  userDetails,
 };

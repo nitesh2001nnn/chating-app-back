@@ -3,6 +3,7 @@ import {
   saveProfileData,
   SaveProfilePhoto,
   saveProfileUserData,
+  userDetails,
 } from "../../models/profile-data-models.js";
 
 const ProfilePhotoImport = async (req, res) => {
@@ -25,16 +26,18 @@ const ProfilePhotoImport = async (req, res) => {
 };
 
 const profileUserData = async (req, res) => {
-  console.log("req", req.body, "res", res);
   const connection = await db.getConnection();
-  const { name, email, bio } = req.body;
 
   try {
+    const { name, email, bio } = req.body;
+    const userId = req.user.id;
+
     await connection.beginTransaction();
 
     const userFields = ["id"];
     const userValues = [req.user.id];
     const userUpdate = [];
+    console.log("userfields", userFields);
 
     if (name !== undefined) {
       userFields.push("fullName");
@@ -50,6 +53,7 @@ const profileUserData = async (req, res) => {
     if (userUpdate.length > 0) {
       const placeholder = userFields.map(() => "?").join(",");
       await saveProfileUserData(
+        connection,
         userFields,
         placeholder,
         userUpdate,
@@ -72,6 +76,7 @@ const profileUserData = async (req, res) => {
       const placeholders = profileFields.map(() => "?").join(",");
 
       await saveProfileData(
+        connection,
         profileFields,
         placeholders,
         profileUpdates,
@@ -85,4 +90,22 @@ const profileUserData = async (req, res) => {
   }
 };
 
-export { ProfilePhotoImport, profileUserData };
+const fetchUserData = async (req, res) => {
+  const userid = req.user.id;
+  console.log("req", req.body);
+
+  try {
+    const data = await userDetails(userid);
+    if (data.length) {
+      return res.status(200).json({ success: 200, data: data });
+    }
+
+    return res
+      .status(400)
+      .json({ success: 400, message: "user details are not found" });
+  } catch (err) {
+    console.error("err in profike data uploading", err);
+  }
+};
+
+export { ProfilePhotoImport, profileUserData, fetchUserData };

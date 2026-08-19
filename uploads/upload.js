@@ -1,9 +1,12 @@
 import multer from "multer";
+import path from "path";
 
 const storage = multer.diskStorage({
   destination: "uploads/profile",
   filename(req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
+    const fileExtension = path.extname(file.originalname);
+    const fileName = `${Date.now()}${fileExtension}`;
+    cb(null, fileName);
   },
 });
 

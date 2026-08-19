@@ -24,10 +24,17 @@ let Max_Attempts = 3;
 
 const userSignup = async (req, res) => {
   const { email, phoneNumber, password, fullName } = req.body;
+
   const genSalt = await bcrypt.genSalt(10);
   const bcryptPass = await bcrypt.hash(password, genSalt);
 
-  const insertion = createUsers(email, false, phoneNumber, bcryptPass);
+  const insertion = createUsers(
+    email,
+    false,
+    phoneNumber,
+    bcryptPass,
+    fullName,
+  );
   if (insertion) {
     const result = await sendLoginOtp(email);
     try {

@@ -23,7 +23,10 @@ import {
   sendMessage,
 } from "../controllers/chat-controllers/chat-controller.js";
 
-import { ProfilePhotoImport } from "../controllers/profile-photo/profile-photo.js";
+import {
+  ProfilePhotoImport,
+  fetchUserData,
+} from "../controllers/profile-photo/profile-photo.js";
 import { upload } from "../uploads/upload.js";
 import { saveProfileUserData } from "../models/profile-data-models.js";
 import { profileUserData } from "../controllers/profile-photo/profile-photo.js";
@@ -52,5 +55,6 @@ router.post(
   upload.single("profile"),
   ProfilePhotoImport,
 );
+router.get("/user-details", authMiddleWare, fetchUserData);
 
 export default router;
