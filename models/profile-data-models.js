@@ -54,20 +54,20 @@ const SaveProfilePhoto = async (user_id, profile_photo) => {
   return result;
 };
 
-const saveProfileUserData = async (
-  connection,
-  userFields,
-  placeholders,
-  userUpdates,
-  userValues,
-) => {
-  const [updateUsers] = await connection.query(
-    `insert into users(${userFields.join(",")}) values(${placeholders}) on duplicate key update ${userUpdates.join(",")}`,
-    userValues,
-  );
+// const saveProfileUserData = async (
+//   connection,
+//   userFields,
+//   placeholders,
+//   userUpdates,
+//   userValues,
+// ) => {
+//   const [updateUsers] = await connection.query(
+//     `insert into users(${userFields.join(",")}) values(${placeholders}) on duplicate key update ${userUpdates.join(",")}`,
+//     userValues,
+//   );
 
-  return updateUsers;
-};
+//   return updateUsers;
+// };
 
 const saveProfileData = async (
   connection,
@@ -90,6 +90,28 @@ const userDetails = async (userId) => {
     [userId],
   );
   return userData;
+};
+
+const saveProfileUserData = async (connection, userId, userFields, userValues, profileFields, profileValues) => {
+  // Update users table only if fields are provided
+  if (userFields.length > 0) {
+    const userSet = userFields.map(field => `${field} = ?`).join(", ");
+
+    await connection.query(
+      `UPDATE users SET ${userSet} WHERE id = ?`,
+      [...userValues, userId]
+    );
+  }
+
+  // Update user_profiles table only if fields are provided
+  if (profileFields.length > 0) {
+    const profileSet = profileFields.map(field => `${field} = ?`).join(", ");
+
+    await connection.query(
+      `UPDATE user_profiles SET ${profileSet} WHERE user_id = ?`,
+      [...profileValues, userId]
+    );
+  }
 };
 
 export {
