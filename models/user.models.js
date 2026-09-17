@@ -118,6 +118,22 @@ const markIsUsed = async (id) => {
   return res;
 };
 
+const blacklistToken = async (token, userid, expireAt) => {
+  const [result] = await db.query(
+    `insert into token_blacklist (token,user_id,expires_at) values (?,?,?)`,
+    [token, userid, expireAt],
+  );
+};
+
+const isTokenExpired = async (token) => {
+  const [rows] = await db.query(
+    "select * from token_blacklist where token = ?",
+    [token],
+  );
+
+  return rows.length > 0;
+};
+
 export {
   createUsers,
   insertOtp,
@@ -130,4 +146,6 @@ export {
   getTokenDetails,
   updatePassword,
   markIsUsed,
+  blacklistToken,
+  isTokenExpired,
 };
