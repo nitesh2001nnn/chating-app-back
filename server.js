@@ -11,6 +11,7 @@ import {
   updateDeleiveryStatus,
   updateSeenStatus,
 } from "./models/chat-models.js";
+import "./jobs/blacklistcleanup.js";
 
 const PORT = process.env.PORT || 5000;
 

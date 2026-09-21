@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { findUser } from "../models/user.models.js";
+import { isTokenExpired } from "../models/user.models.js";
 
 const authMiddleWare = async (req, res, next) => {
   try {
@@ -10,6 +11,14 @@ const authMiddleWare = async (req, res, next) => {
     }
     const token = authHeader.split(" ")[1];
 
+    // Check if token was blacklisted during logout
+    const blacklisted = await isTokenExpired(token);
+
+    if (blacklisted) {
+      return res.status(401).json({
+        message: "token has been logged out",
+      });
+    }
     const decode = jwt.verify(token, process.env.jwt_secretKey);
 
     const users = await findUser(decode.email);

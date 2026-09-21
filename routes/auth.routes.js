@@ -7,6 +7,7 @@ import {
   resendOtp,
   PasswordResetToken,
   ResetPassword,
+  logout,
 } from "../controllers/auth.controller.js";
 import {
   addContact,
@@ -56,5 +57,6 @@ router.post(
   ProfilePhotoImport,
 );
 router.get("/user-details", authMiddleWare, fetchUserData);
+router.post("/logout", logout);
 
 export default router;

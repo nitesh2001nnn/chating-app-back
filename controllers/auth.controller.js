@@ -1,5 +1,6 @@
 import sendOtp, { transporter } from "../config/mailer.js";
 import {
+  blacklistToken,
   createUsers,
   findUser,
   forgotPassToken,
@@ -18,6 +19,7 @@ import { hashCompare, hash } from "../utils/hash.js";
 import db from "../config/db.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 
 let window_time = 6 * 60 * 1000;
 let Max_Attempts = 3;
@@ -378,6 +380,37 @@ const ResetPassword = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    console.log("authheader", authHeader);
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("res");
+      return res.status(401).json({
+        message: "unauthorized",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const decode = jwt.verify(token, process.env.jwt_secretKey);
+
+    console.log("token in logout", token, "decode", decode);
+
+    const expire = new Date(decode.exp * 1000);
+
+    await blacklistToken(token, decode.userId, expire);
+    return res.status(200).json({
+      message: "logout successful",
+    });
+  } catch (err) {
+    return res.status(401).json({
+      message: "invalid token",
+    });
+  }
+};
+
 export {
   userSignup,
   verifyOtp,
@@ -386,4 +419,5 @@ export {
   resendOtp,
   PasswordResetToken,
   ResetPassword,
+  logout,
 };
